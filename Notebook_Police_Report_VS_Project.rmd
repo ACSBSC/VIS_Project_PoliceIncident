@@ -1,0 +1,227 @@
+---
+title: "VS Project - Police Incidents in San Francisco"
+output: html_notebook
+author: "Anne Constanze Schreiber"
+---
+
+The selected data set for the Data Visualization Project is a report of police incidents in San Francisco from 2018 up to today's year. It shows information about particular incidents received throughout the years, such as what type of incident was, when did it happen, where did it happen, etc.
+
+The dataset includes 34 different variables, which include categorical values, numerical values, time-dependent values and coordinates.
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(forcats) 
+
+```
+
+```{r}
+
+df <- read.csv(file ="Police_Department_Incident_Reports__2018_to_Present.csv")
+names(df)
+```
+Next some values will be shown to see some example of the contents of the data. 
+
+```{r}
+head(df)
+```
+
+In this notebook, not all of the 34 variables will be used, as I am not interested in all of them. Some of the variables that will be most used to analyse the data are Category, Year and Time.
+
+First I want to show the reader what is the most common type of incident the police in San Francisco received in the last year (2021).
+
+In order to show this to the reader, a bar-plot is going to be implemented, where on the y-axis all the different types of police incidents are present and the x-axis shows the number of incidents the particular category has. 
+
+For this the library of ggplot2 will be used to plot the interested information and the library of forcats will be used in order to organize the bar chart from the most common type of incident to the least one.
+
+With the following bar plot, the provided message I tend to send to the reader is which type of incidents are the most common, so that the reader can focus on the length of the bar. 
+
+```{r fig.align="center", echo = FALSE,fig.width = 14}
+df<-df[!(df$Incident.Category == ""), ]
+df_2021<-df[(df$Incident.Year==2021),]
+
+incident_plot<- ggplot(df_2021, aes(y=fct_rev(forcats::fct_infreq(Incident.Category))))+
+  geom_bar(stat="count", fill="white", color="black", width=0.5)+
+  labs(title="Number of ocurred incidents in San Francisco 2021",x="Number of cases", y="Type of incident")+
+  theme_minimal()+
+  theme(panel.grid.major.y = element_blank(),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0)),
+        axis.title=element_text(size=12),
+        plot.title = element_text(margin = margin(t = 0, r = 0, b = 20, l = 0), face="bold", size=15, hjust = 0.5))
+        
+incident_plot
+```
+
+In the previous plot one can see that the most frequent incident that the Police in San Francisco had on 2021 was Larceny Theft, surpassing 30K incidents that year, followed Malicious Mischief, Burglary, Other Miscellaneous, Motor Vehicle Theft and Assault incidents which are around 7K~10K incidents each.
+
+I also want to show the reader which hours of the day is more likely these kind of incidents happen, so the reader would be aware when to be more cautious. 
+
+For this I'll plot a histogram plot, where the density of each time will be shown. In order for the reader to decipher the piece of data a different color will be given depending on the data density, where green represents the lowest density of incidents and red the highest density of incidents. This will help the reader to associate that the color green means that those are the safest hours of the day, in contrast the red one will translate to being the most dangerous time of the day.
+
+I do not wish to use a bar plot as a descending order is not necessary and showing an histogram, which shows the density of data of each category or, in this case, for each hour, is more appropriate to use. Having the bins arranged chronotically will help the user to associate the time of the day better. 
+
+
+```{r fig.align="center", echo = FALSE,fig.width = 14}
+hr <- as.POSIXlt(df_2021$Incident.Time,format="%H:%M")
+df_2021$Incident.Hour <- hr$hour
+
+#incident time
+
+incident_time<- ggplot(df_2021, aes(x=Incident.Hour))+
+  geom_histogram(breaks=seq(0, 23, by = 1), 
+                 alpha = 0.8,
+                 col="red",
+                 aes(fill=..count..)) + 
+  scale_fill_gradient("Count", low = "green", high = "red")+
+  labs(title="Number of ocurred incidents per Hour in San Francisco 2021",x="Time", y="Nr. of Incidents")+
+  theme_minimal()+
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        legend.position="none",
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+        axis.title.y = element_text(margin = margin(t=0, r=20, b=0, l=0)),
+        axis.title=element_text(size=12),
+        plot.title = element_text(margin = margin(t = 0, r = 0, b = 20, l = 0), face="bold", size=15, hjust = 0.5))
+
+incident_time
+
+```
+From the previous plot, it is shown that the hours, where more incidents were present, are between the afternoon and the evening. Taking into account the top most frequent incident, it makes sense that these hours have more incident reports. To demonstrate this, I decided to show the user when the top most concerning incidents are likely to happen within the day.
+
+The concerning incident that I'll show the reader are Larceny Theft, Burglary, Assault and Motor Vehicle theft.
+
+```{r}
+#time burglary
+
+burglary <- df_2021[df_2021$Incident.Category=="Burglary",]
+
+incident_timeB<- ggplot(burglary, aes(x=Incident.Hour))+
+  geom_histogram(breaks=seq(0, 23, by = 1), 
+                 alpha = 0.8,
+                 col="red",
+                 aes(fill=..count..)) + 
+  scale_fill_gradient("Count", low = "green", high = "red")+
+  labs(title="Number of occurred Burglary per Hour in San Francisco 2021",x="Time", y="Nr. of Burglary Incidents")+
+  theme_minimal()+
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        legend.position="none",
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+        axis.title.y = element_text(margin = margin(t=0, r=20, b=0, l=0)),
+        axis.title=element_text(size=12),
+        plot.title = element_text(margin = margin(t = 0, r = 0, b = 20, l = 0), face="bold", size=15, hjust = 0.5))
+
+#time Larceny Theft
+
+Larceny_Theft <- df_2021[df_2021$Incident.Category=="Larceny Theft",]
+
+incident_timeL<- ggplot(Larceny_Theft, aes(x=Incident.Hour))+
+  geom_histogram(breaks=seq(0, 23, by = 1), 
+                 alpha = 0.8,
+                 col="red",
+                 aes(fill=..count..)) + 
+  scale_fill_gradient("Count", low = "green", high = "red")+
+  labs(title="Number of occurred Larceny Theft per Hour in San Francisco 2021",x="Time", y="Nr. of Larceny Theft Incidents")+
+  theme_minimal()+
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        legend.position="none",
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+        axis.title.y = element_text(margin = margin(t=0, r=20, b=0, l=0)),
+        axis.title=element_text(size=12),
+        plot.title = element_text(margin = margin(t = 0, r = 0, b = 20, l = 0), face="bold", size=15, hjust = 0.5))
+
+#time Motor Vehicle Theft
+
+Motor_Vehicle_Theft <- df_2021[df_2021$Incident.Category=="Motor Vehicle Theft",]
+
+incident_timeM<- ggplot(Motor_Vehicle_Theft, aes(x=Incident.Hour))+
+  geom_histogram(breaks=seq(0, 23, by = 1), 
+                 alpha = 0.8,
+                 col="red",
+                 aes(fill=..count..)) + 
+  scale_fill_gradient("Count", low = "green", high = "red")+
+  labs(title="Number of occurred Motor Vehicle Theft per Hour in San Francisco 2021",x="Time", y="Nr. of Motor Vehicle Theft Incidents")+
+  theme_minimal()+
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        legend.position="none",
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+        axis.title.y = element_text(margin = margin(t=0, r=20, b=0, l=0)),
+        axis.title=element_text(size=12),
+        plot.title = element_text(margin = margin(t = 0, r = 0, b = 20, l = 0), face="bold", size=15, hjust = 0.5))
+
+#time Assault
+
+Assault <- df_2021[df_2021$Incident.Category=="Assault",]
+
+incident_timeA<- ggplot(Assault, aes(x=Incident.Hour))+
+  geom_histogram(breaks=seq(0, 23, by = 1), 
+                 alpha = 0.8,
+                 col="red",
+                 aes(fill=..count..)) + 
+  scale_fill_gradient("Count", low = "green", high = "red")+
+  labs(title="Number of occurred Assaults per Hour in San Francisco 2021",x="Time", y="Nr. of Assaults Incidents")+
+  theme_minimal()+
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        legend.position="none",
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+        axis.title.y = element_text(margin = margin(t=0, r=20, b=0, l=0)),
+        axis.title=element_text(size=12),
+        plot.title = element_text(margin = margin(t = 0, r = 0, b = 20, l = 0), face="bold", size=15, hjust = 0.5))
+```
+
+```{r fig.align="center", echo = FALSE,fig.width = 14}
+incident_timeL
+incident_timeB
+incident_timeM
+incident_timeA
+```
+
+From the fist plot "Number of occurred Larceny Theft per Hour in San Francisco 2021" we can see that the incident concentrates between 12:00-19:00 hours and it is less likely to happen between 1:00am-10:00am. 
+The second plot shows that burglary is more likely to happen late at night or in the first hours of the day, this makes sense as normally a burglar enters a house when it is dark and when most of the people are profoundly asleep. This is in order to not being seen or that anyone could report them. The third plot shows that cars are more likely to be stolen between 14:00-22:00. Lastly the forth plot shows that an assault is more likely to occur on the afternoon and less likely to happen in the morning. 
+
+
+I also want to show the reader the neighborhoods where the previous incidents are more likely to happen, in order to do this, I'll implement another bar plot, as the first plot, to display the neighborhood with more incidents to the one with least incidents. By deciphering the length of the bins, I will carry the message which neighborhood is the most dangerous.
+
+
+```{r fig.align="center", echo = FALSE,fig.width = 14}
+neighTopIncidents <- df_2021[df_2021$Incident.Category==c("Larceny Theft","Assault","Burglary","Motor Vehicle Theft"),]
+neighTopIncidents<-neighTopIncidents[!(neighTopIncidents$Analysis.Neighborhood == ""), ]
+neighTopIncidents<-neighTopIncidents[!(neighTopIncidents$Analysis.Neighborhood == "null"), ]
+
+neigh_plot<- ggplot(neighTopIncidents, aes(y=fct_rev(forcats::fct_infreq(Analysis.Neighborhood))))+
+  geom_bar(stat="count", fill="white", color="black", width=0.5)+
+  labs(title="Number of incidents per Neighborhood in San Francisco 2021",x="Number of cases", y="Neigborhoods")+
+  theme_minimal()+
+  theme(panel.grid.major.y = element_blank(),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0)),
+        axis.title=element_text(size=12),
+        plot.title = element_text(margin = margin(t = 0, r = 0, b = 20, l = 0), face="bold", size=15, hjust = 0.5))
+        
+neigh_plot
+
+```
+
+At the top of the bar plot the neighborhood with the most incidents is Mission, followed by South Beach and Tenderloin. 
+
+
+I also tried to show the reader, using the coordinates, the location of the 4 incidents previously shown, but there so many points that is not visually possible for the reader to take that amount of information, also only using ggplot, the maps that can be done do not reflect or match the coordinates shown by the dataset. As the next plot shows, it is an attempt to show the incidents by location, which just by looking at it, it does not show any useful location which the reader can decipher, if the reader does not know the map of San Francisco. A person who has an idea of the map of San Francisco, could have a better understanding of the data shown in the plot.
+
+```{r ig.align="center", echo = FALSE,fig.width = 14}
+
+ggplot(neighTopIncidents, aes(y=Latitude, x = Longitude))+
+  geom_point(aes(group = Incident.Category, color=Incident.Category),size = 2)+
+  labs(title="Incidents Location in San Francisco 2021", color="Incident Category")+
+  theme_minimal()+
+  guides(color = guide_legend(override.aes = list(size = 5)))+
+  theme(panel.grid= element_blank(),
+        legend.title = element_text(face = 'bold', size = 13),
+        legend.text = element_text(size=12),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        plot.title = element_text(margin = margin(t = 0, r = 0, b = 20, l = 0), face="bold", size=20, hjust = 0.5))
+```
+
+
